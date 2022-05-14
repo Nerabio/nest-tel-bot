@@ -11,4 +11,5 @@ export enum NodeEventEnum {
   ADD = 'ADD',
   OPEN = 'OPEN',
   DEL = 'DEL',
+  SET_NODE_ID = 'SET_NODE_ID',
 }

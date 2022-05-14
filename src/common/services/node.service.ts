@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { NodeModel } from '../../models/node.model';
 import { BehaviorSubject } from 'rxjs';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { NodeEventEnum } from "../enums/node-event.enum";
+import { NodeEventEnum } from '../enums/node-event.enum';
 
 @Injectable()
 export class NodeService {
@@ -38,7 +38,6 @@ export class NodeService {
     nodes: NodeModel[] = this.root.nodes,
   ): NodeModel | null {
     for (let i = 0; i < nodes.length; i++) {
-
       if (nodes[i].id === id) {
         return nodes[i];
       } else {

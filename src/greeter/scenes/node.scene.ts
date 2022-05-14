@@ -15,14 +15,19 @@ import { Update as UT } from 'telegraf/typings/core/types/typegram';
 import { NodeEventEnum } from '../../common/enums/node-event.enum';
 import { nodeMachine } from '../../models/fsm.model';
 import { interpret } from '@xstate/fsm';
+import { RenderService } from '../../common/services/render.service';
 
 @Scene(NODE_SCENE_ID)
 export class NodeScene {
   nService = interpret(nodeMachine);
-  constructor(private readonly nodeService: NodeService) {}
+  constructor(
+    private readonly nodeService: NodeService,
+    private readonly renderService: RenderService,
+  ) {}
   @SceneEnter()
   onSceneEnter() {
     this.nService.start();
+    this.nService.subscribe((state) => console.log(state));
     return 'hello';
   }
 
@@ -40,8 +45,11 @@ export class NodeScene {
     });
 
     this.nService.send({ type: 'SELECT_NODE' });
-    console.log(this.nService.state.value);
-
+    //console.log(this.nService.state.value);
+    //console.log(this.nService.state.actions);
+    //this.nService.state.context.nodeId = 123;
+    //console.log(this.nService.state.context.nodeId);
+    this.renderService.render(this.nService.state);
     ctx.reply(rootMap.name, {
       reply_markup: {
         inline_keyboard: [buttons],
@@ -72,11 +80,21 @@ export class NodeScene {
     const nodeId = 'data' in cbQuery ? cbQuery.data : null;
     ctx.answerCbQuery();
 
+    this.nService.send({
+      type: 'SELECT_NODE_ID',
+      nodeId: nodeId,
+    } as SetNodeIdEventInterface);
     const buttons = [
       [
         {
           text: 'Добавить контент',
           callback_data: 'event/' + NodeEventEnum.ADD,
+        },
+      ],
+      [
+        {
+          text: 'SET_NODE_ID',
+          callback_data: 'event/' + NodeEventEnum.SET_NODE_ID,
         },
       ],
       [
@@ -101,9 +119,12 @@ export class NodeScene {
 
     const node = this.nodeService.selectNodeById(+nodeId);
 
-    this.nService.send({ type: 'SELECT_OPERATION' });
-    console.log(this.nService.state.value);
+    this.nService.send({
+      type: 'SELECT_OPERATION',
+    });
 
+    //console.log(this.nService.state.value);
+    //console.log(this.nService.state.actions);
     ctx.reply('Выбран пункт -> ' + node?.name, {
       reply_markup: {
         inline_keyboard: buttons,
@@ -123,8 +144,13 @@ export class NodeScene {
     //     break;
     // }
 
+    this.nService.send({
+      type: 'SELECT_OPERATION_ID',
+      operationId: event,
+    } as SetOperationIdEventInterface);
+
     this.nService.send({ type: event });
-    console.log(this.nService.state.value);
+    // console.log(this.nService.state.value);
 
     return (
       'событие установлено ' + this.nodeService.activeNode.name + ' ' + event
