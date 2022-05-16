@@ -394,5 +394,6 @@ Temporary Items
 
 =======
 # Local
-.env
 dist
+/src/environments/development.env
+/src/environments/production.env

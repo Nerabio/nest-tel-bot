@@ -15,10 +15,14 @@ import { Update as UT } from 'telegraf/typings/core/types/typegram';
 import { NodeEventEnum } from '../../common/enums/node-event.enum';
 import { nodeMachine } from '../../models/fsm.model';
 import { interpret } from '@xstate/fsm';
-import { RenderService } from '../../common/services/render.service';
+import {
+  MachineState,
+  RenderService,
+} from '../../common/services/render.service';
 
 @Scene(NODE_SCENE_ID)
 export class NodeScene {
+  ctx: Context;
   nService = interpret(nodeMachine);
   constructor(
     private readonly nodeService: NodeService,
@@ -27,8 +31,34 @@ export class NodeScene {
   @SceneEnter()
   onSceneEnter() {
     this.nService.start();
-    this.nService.subscribe((state) => console.log(state));
+    this.nService.subscribe((state) => {
+      console.log(state);
+      this.stateHandler(state);
+    });
     return 'hello';
+  }
+
+  private stateHandler(state: MachineState): void {
+    // const chatId = this.ctx.callbackQuery.getMessage().getMessageId();
+    // this.ctx.deleteMessage(this.ctx.);
+    // if (!this.ctx) {
+    //   return;
+    // }
+    // if (!this.ctx?.callbackQuery) {
+    //   return;
+    // }
+    //
+    // const cbQuery = this.ctx.callbackQuery;
+    // console.log(cbQuery.message);
+    // this.ctx.deleteMessage(cbQuery.message.message_id);
+    const buttons = this.renderService.render(state);
+    if (buttons) {
+      this.ctx.reply('root', {
+        reply_markup: {
+          inline_keyboard: [buttons],
+        },
+      });
+    }
   }
 
   @SceneLeave()
@@ -38,44 +68,21 @@ export class NodeScene {
   }
 
   @Command(['root', 'node'])
-  onGetRoot(@Ctx() ctx: Context) {
-    const rootMap = this.nodeService.getRoot();
-    const buttons = rootMap?.nodes.map((node) => {
-      return { text: node.name, callback_data: node.id.toString() };
-    });
+  onGetRoot(@Ctx() ctx: Context & { update: UT.CallbackQueryUpdate }) {
+    this.ctx = ctx;
 
     this.nService.send({ type: 'SELECT_NODE' });
-    //console.log(this.nService.state.value);
-    //console.log(this.nService.state.actions);
-    //this.nService.state.context.nodeId = 123;
-    //console.log(this.nService.state.context.nodeId);
-    this.renderService.render(this.nService.state);
-    ctx.reply(rootMap.name, {
-      reply_markup: {
-        inline_keyboard: [buttons],
-      },
-    });
+    // const buttons = this.renderService.render(this.nService.state);
+    // ctx.reply('root', {
+    //   reply_markup: {
+    //     inline_keyboard: [buttons],
+    //   },
+    // });
   }
-
-  // @Command(['get', 'node'])
-  // onNodeCommand(@Ctx() ctx: Context, @Message('text') text: string) {
-  //   console.log(Number(text)); ///Nan
-  //   const selectNode = this.nodeService.searchNodeById();
-  //   console.log(this.nodeService.root);
-  //   const buttons = selectNode?.nodes.map((node) => {
-  //     return { text: node.name, callback_data: node.id.toString() };
-  //   });
-  //   console.log(buttons);
-  //    ctx.reply(selectNode?.name, {
-  //     reply_markup: {
-  //       inline_keyboard: [buttons],
-  //     },
-  //   });
-  //   //return `[${selectNode?.id}: ${selectNode?.name}] => (${children})`;
-  // }
 
   @Action(/\d+/)
   async onSelectNode(@Ctx() ctx: Context & { update: UT.CallbackQueryUpdate }) {
+    this.ctx = ctx;
     const cbQuery = ctx.update.callback_query;
     const nodeId = 'data' in cbQuery ? cbQuery.data : null;
     ctx.answerCbQuery();
@@ -84,65 +91,28 @@ export class NodeScene {
       type: 'SELECT_NODE_ID',
       nodeId: nodeId,
     } as SetNodeIdEventInterface);
-    const buttons = [
-      [
-        {
-          text: 'Добавить контент',
-          callback_data: 'event/' + NodeEventEnum.ADD,
-        },
-      ],
-      [
-        {
-          text: 'SET_NODE_ID',
-          callback_data: 'event/' + NodeEventEnum.SET_NODE_ID,
-        },
-      ],
-      [
-        {
-          text: 'Добавить узел',
-          callback_data: 'event/' + NodeEventEnum.ADD,
-        },
-      ],
-      [
-        {
-          text: 'Просмотр содермимого',
-          callback_data: 'event/' + NodeEventEnum.OPEN,
-        },
-      ],
-      [
-        {
-          text: '< BACK',
-          callback_data: 'event/' + NodeEventEnum.BACK,
-        },
-      ],
-    ];
 
-    const node = this.nodeService.selectNodeById(+nodeId);
+    //const buttons = this.renderService.render(this.nService.state);
+
+    //const node = this.nodeService.selectNodeById(+nodeId);
 
     this.nService.send({
       type: 'SELECT_OPERATION',
     });
-
-    //console.log(this.nService.state.value);
-    //console.log(this.nService.state.actions);
-    ctx.reply('Выбран пункт -> ' + node?.name, {
-      reply_markup: {
-        inline_keyboard: buttons,
-      },
-    });
+    // ctx.reply('Выбран пункт -> ' + node?.name, {
+    //   reply_markup: {
+    //     inline_keyboard: [buttons],
+    //   },
+    // });
   }
 
   @Action(/event\/\w+/)
   async onEventNode(@Ctx() ctx: Context & { update: UT.CallbackQueryUpdate }) {
+    this.ctx = ctx;
     const cbQuery = ctx.update.callback_query;
     const userAnswer = 'data' in cbQuery ? cbQuery.data : null;
     const event = userAnswer.replace('event/', '') as NodeEventEnum;
     this.nodeService.setEvent(event);
-    // switch (event) {
-    //   case NodeEventEnum.ADD_NODE:
-    //     this.nodeService.addNodeToCurrent();
-    //     break;
-    // }
 
     this.nService.send({
       type: 'SELECT_OPERATION_ID',
@@ -150,7 +120,6 @@ export class NodeScene {
     } as SetOperationIdEventInterface);
 
     this.nService.send({ type: event });
-    // console.log(this.nService.state.value);
 
     return (
       'событие установлено ' + this.nodeService.activeNode.name + ' ' + event

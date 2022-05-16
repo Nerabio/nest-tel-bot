@@ -5,30 +5,29 @@ import { GreeterModule } from './greeter/greeter.module';
 import { GreeterBotName } from './app.constants';
 import { sessionMiddleware } from './middleware/session.middleware';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { getEnvPath } from './environments/env.helper';
+import { ConfigModule } from '@nestjs/config';
+
+const envFilePath: string = getEnvPath(`${__dirname}/environments`);
 
 @Module({
-  // imports: [
-  //   TelegrafModule.forRoot({
-  //     token: '1701418155:AAHQ3NsKORFMCvn94C7psQoo46AtLE6lo2I',
-  //     include: [EchoModule],
-  //   }),
-  // ],
   imports: [
+    ConfigModule.forRoot({ envFilePath, isGlobal: true }),
     TelegrafModule.forRoot({
-      token: '1701418155:AAHQ3NsKORFMCvn94C7psQoo46AtLE6lo2I',
+      token: `${process.env.TOKEN_BOT}`,
       include: [EchoModule],
     }),
     TelegrafModule.forRootAsync({
       botName: GreeterBotName,
       useFactory: () => ({
-        token: '612325678:AAFrCBsraxaRDORxEvc6i-Hf3lEBv4dlIpg',
+        token: `${process.env.TOKEN_BOT_2}`,
         middlewares: [sessionMiddleware],
         include: [GreeterModule],
       }),
     }),
     EchoModule,
     GreeterModule,
-    EventEmitterModule.forRoot()
+    EventEmitterModule.forRoot(),
   ],
   controllers: [],
   providers: [],

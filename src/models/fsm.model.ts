@@ -25,6 +25,18 @@ const selectOperationId = assign({
   },
 });
 
+const clearOperationId = assign({
+  operationId: (context: Context) => {
+    return (context.operationId = null);
+  },
+});
+
+const clearNodeId = assign({
+  operationId: (context: Context) => {
+    return (context.nodeId = null);
+  },
+});
+
 function glassIsFull(context, event) {
   return context.nodeId >= 10;
 }
@@ -79,19 +91,34 @@ export const nodeMachine = createMachine<Context>(
           ADD: { target: 'add' },
           OPEN: { target: 'open' },
           DEL: { target: 'del' },
-          BACK: { target: 'selectNode' },
+          BACK: { target: 'selectNode', actions: [clearNodeId] },
         },
       },
       add: {
         on: {
           ADD_NODE: {},
           ADD_CONTENT: {},
-          BACK: { target: 'selectOperation' },
+          BACK: { target: 'selectOperation', actions: [clearOperationId] },
         },
       },
-      edit: { on: { BACK: { target: 'selectOperation' } } },
-      open: { on: { BACK: { target: 'selectOperation' } } },
-      del: { on: { BACK: { target: 'selectOperation' } } },
+      edit: {
+        on: {
+          BACK: {
+            target: 'selectOperation',
+            actions: [clearOperationId],
+          },
+        },
+      },
+      open: {
+        on: {
+          BACK: { target: 'selectOperation', actions: [clearOperationId] },
+        },
+      },
+      del: {
+        on: {
+          BACK: { target: 'selectOperation', actions: [clearOperationId] },
+        },
+      },
     },
   },
   {
@@ -102,6 +129,8 @@ export const nodeMachine = createMachine<Context>(
       // },
       setNodeId,
       selectOperationId,
+      clearOperationId,
+      clearNodeId,
     },
   },
 );
