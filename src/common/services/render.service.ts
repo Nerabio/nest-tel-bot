@@ -26,6 +26,9 @@ export class RenderService {
     if (state.matches(NodeEventEnum.SELECT_NODE)) {
       return this.getAllNodes(state);
     }
+    if (state.matches(NodeEventEnum.GET_NODE_LIST)) {
+      return this.getAllNodes(state);
+    }
     if (state.matches(NodeEventEnum.SELECT_OPERATION)) {
       return this.getOperations(state);
     }

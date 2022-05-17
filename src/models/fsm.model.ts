@@ -48,17 +48,17 @@ export const nodeMachine = createMachine<Context>(
       nodeId: null,
       operationId: null,
     },
-    initial: 'getNodeList',
+    initial: 'enter',
     states: {
       enter: {
         on: {
-          SELECT_NODE: { target: 'selectNode' },
+          GET_NODE_LIST: { target: 'getNodeList' },
         },
       },
       getNodeList: {
         on: {
-          SELECT_NODE: {
-            target: 'selectNode',
+          SELECT_NODE_ID: {
+            target: 'selectOperation',
             actions: [setNodeId],
           },
         },

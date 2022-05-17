@@ -59,7 +59,7 @@ export class NodeScene {
   @Command(['root', 'node'])
   onGetRoot(@Ctx() ctx: Context & { update: UT.CallbackQueryUpdate }) {
     this.ctx = ctx;
-    this.nService.send({ type: 'SELECT_NODE' });
+    this.nService.send({ type: 'GET_NODE_LIST' });
   }
 
   @Action(/\d+/)
