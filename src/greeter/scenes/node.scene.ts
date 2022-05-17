@@ -27,35 +27,24 @@ export class NodeScene {
   constructor(
     private readonly nodeService: NodeService,
     private readonly renderService: RenderService,
-  ) {}
-  @SceneEnter()
-  onSceneEnter() {
-    this.nService.start();
+  ) {
     this.nService.subscribe((state) => {
       console.log(state);
       this.stateHandler(state);
     });
+  }
+  @SceneEnter()
+  onSceneEnter() {
+    this.nService.start();
     return 'hello';
   }
 
   private stateHandler(state: MachineState): void {
-    // const chatId = this.ctx.callbackQuery.getMessage().getMessageId();
-    // this.ctx.deleteMessage(this.ctx.);
-    // if (!this.ctx) {
-    //   return;
-    // }
-    // if (!this.ctx?.callbackQuery) {
-    //   return;
-    // }
-    //
-    // const cbQuery = this.ctx.callbackQuery;
-    // console.log(cbQuery.message);
-    // this.ctx.deleteMessage(cbQuery.message.message_id);
-    const buttons = this.renderService.render(state);
-    if (buttons) {
-      this.ctx.reply('root', {
+    const control = this.renderService.render(state);
+    if (state.changed && control) {
+      this.ctx.reply(control.title, {
         reply_markup: {
-          inline_keyboard: [buttons],
+          inline_keyboard: control.inlineButtons,
         },
       });
     }
@@ -70,14 +59,7 @@ export class NodeScene {
   @Command(['root', 'node'])
   onGetRoot(@Ctx() ctx: Context & { update: UT.CallbackQueryUpdate }) {
     this.ctx = ctx;
-
     this.nService.send({ type: 'SELECT_NODE' });
-    // const buttons = this.renderService.render(this.nService.state);
-    // ctx.reply('root', {
-    //   reply_markup: {
-    //     inline_keyboard: [buttons],
-    //   },
-    // });
   }
 
   @Action(/\d+/)
@@ -96,9 +78,6 @@ export class NodeScene {
 
     //const node = this.nodeService.selectNodeById(+nodeId);
 
-    this.nService.send({
-      type: 'SELECT_OPERATION',
-    });
     // ctx.reply('Выбран пункт -> ' + node?.name, {
     //   reply_markup: {
     //     inline_keyboard: [buttons],
@@ -114,10 +93,10 @@ export class NodeScene {
     const event = userAnswer.replace('event/', '') as NodeEventEnum;
     this.nodeService.setEvent(event);
 
-    this.nService.send({
-      type: 'SELECT_OPERATION_ID',
-      operationId: event,
-    } as SetOperationIdEventInterface);
+    // this.nService.send({
+    //   type: 'SELECT_OPERATION_ID',
+    //   operationId: event,
+    // } as SetOperationIdEventInterface);
 
     this.nService.send({ type: event });
 

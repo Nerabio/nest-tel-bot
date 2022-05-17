@@ -66,13 +66,13 @@ export const nodeMachine = createMachine<Context>(
       selectNode: {
         on: {
           SELECT_NODE_ID: {
-            target: 'selectNode',
+            target: 'selectOperation',
             actions: [setNodeId],
           },
-          SELECT_OPERATION: {
-            target: 'selectOperation',
-            actions: [selectOperationId],
-          },
+          // SELECT_OPERATION: {
+          //   target: 'selectOperation',
+          //   actions: [selectOperationId],
+          // },
           BACK: { target: 'getNodeList' },
         },
       },
@@ -83,10 +83,10 @@ export const nodeMachine = createMachine<Context>(
       },
       selectOperation: {
         on: {
-          SELECT_OPERATION_ID: {
-            target: 'selectOperation',
-            actions: [selectOperationId],
-          },
+          // SELECT_OPERATION_ID: {
+          //   target: 'selectOperation',
+          //   actions: [selectOperationId],
+          // },
           EDIT: { target: 'edit', cond: glassIsFull },
           ADD: { target: 'add' },
           OPEN: { target: 'open' },

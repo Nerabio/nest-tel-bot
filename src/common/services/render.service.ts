@@ -12,10 +12,15 @@ export type MachineState = StateMachine.State<
 
 export type InlineKeyboardButton = { text: string; callback_data: string }[];
 
+export interface MessageControls {
+  title: string;
+  inlineButtons: InlineKeyboardButton[];
+}
+
 @Injectable()
 export class RenderService {
   constructor(private readonly nodeService: NodeService) {}
-  public render(state: MachineState): InlineKeyboardButton | null {
+  public render(state: MachineState): MessageControls | null {
     console.log('this state');
     console.log(state.matches(NodeEventEnum.SELECT_NODE));
     if (state.matches(NodeEventEnum.SELECT_NODE)) {
@@ -27,36 +32,55 @@ export class RenderService {
     return null;
   }
 
-  private getAllNodes(state: MachineState): InlineKeyboardButton | null {
+  private getAllNodes(state: MachineState): MessageControls | null {
     const rootMap = this.nodeService.getRoot();
     const buttons = rootMap?.nodes.map((node) => {
-      return { text: node.name, callback_data: node.id.toString() };
+      return [{ text: node.name, callback_data: node.id.toString() }];
     });
-    return buttons;
+    return {
+      title: rootMap.name,
+      inlineButtons: buttons,
+    };
   }
 
-  private getOperations(state: MachineState): InlineKeyboardButton | null {
+  private getBack(): InlineKeyboardButton {
     return [
-      {
-        text: 'Добавить контент',
-        callback_data: 'event/' + NodeEventEnum.ADD,
-      },
-      {
-        text: 'SET_NODE_ID',
-        callback_data: 'event/' + NodeEventEnum.SET_NODE_ID,
-      },
-      {
-        text: 'Добавить узел',
-        callback_data: 'event/' + NodeEventEnum.ADD,
-      },
-      {
-        text: 'Просмотр содермимого',
-        callback_data: 'event/' + NodeEventEnum.OPEN,
-      },
       {
         text: '< BACK',
         callback_data: 'event/' + NodeEventEnum.BACK,
       },
     ];
+  }
+
+  private getOperations(state: MachineState): MessageControls {
+    const selectNode = this.nodeService.selectNodeById(
+      Number(state.context.nodeId),
+    );
+    return {
+      title: `Выбран ${selectNode.name}`,
+      inlineButtons: [
+        [
+          {
+            text: 'Добавить контент',
+            callback_data: 'event/' + NodeEventEnum.ADD,
+          },
+          {
+            text: 'SET_NODE_ID',
+            callback_data: 'event/' + NodeEventEnum.SET_NODE_ID,
+          },
+        ],
+        [
+          {
+            text: 'Добавить узел',
+            callback_data: 'event/' + NodeEventEnum.ADD,
+          },
+          {
+            text: 'Просмотр содермимого',
+            callback_data: 'event/' + NodeEventEnum.OPEN,
+          },
+        ],
+        this.getBack(),
+      ],
+    } as MessageControls;
   }
 }

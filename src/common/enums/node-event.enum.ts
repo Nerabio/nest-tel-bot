@@ -12,4 +12,5 @@ export enum NodeEventEnum {
   OPEN = 'OPEN',
   DEL = 'DEL',
   SET_NODE_ID = 'SET_NODE_ID',
+  GET_NODE_LIST = 'getNodeList',
 }
