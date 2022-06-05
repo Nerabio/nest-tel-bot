@@ -13,4 +13,5 @@ export enum NodeEventEnum {
   DEL = 'DEL',
   SET_NODE_ID = 'SET_NODE_ID',
   GET_NODE_LIST = 'getNodeList',
+  OPERATION_DONE = 'operationDone',
 }

@@ -16,9 +16,10 @@ import { NodeEventEnum } from '../../common/enums/node-event.enum';
 import { nodeMachine } from '../../models/fsm.model';
 import { interpret } from '@xstate/fsm';
 import {
-  MachineState,
   RenderService,
 } from '../../common/services/render.service';
+import { MachineState } from 'src/common/type/machine-state.type';
+import { ExecuteService } from 'src/common/services/execute.service';
 
 @Scene(NODE_SCENE_ID)
 export class NodeScene {
@@ -27,6 +28,7 @@ export class NodeScene {
   constructor(
     private readonly nodeService: NodeService,
     private readonly renderService: RenderService,
+    private readonly executeService: ExecuteService,
   ) {
     this.nService.subscribe((state) => {
       console.log(state);
@@ -106,9 +108,9 @@ export class NodeScene {
   }
 
   @On('text')
-  onMessage(@Message('text') text: string): string {
-    //this.nodeService.addContent(text);
-    return 'save ';
+  onMessage(@Message('text') text: string): void {
+    this.executeService.exec(this.nService.state as MachineState, text);
+    this.nService.send({type: 'OPERATION_DONE'});
   }
 
   @Command('leave')

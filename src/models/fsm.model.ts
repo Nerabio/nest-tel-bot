@@ -94,10 +94,18 @@ export const nodeMachine = createMachine<Context>(
           BACK: { target: 'selectNode', actions: [clearNodeId] },
         },
       },
+      operationDone:{
+        on:{
+          BACK: { target: 'selectOperation', actions: [clearOperationId] },
+        }
+      },
       add: {
         on: {
           ADD_NODE: {},
           ADD_CONTENT: {},
+          OPERATION_DONE: {
+            target: 'operationDone'
+          },
           BACK: { target: 'selectOperation', actions: [clearOperationId] },
         },
       },

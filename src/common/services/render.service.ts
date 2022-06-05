@@ -1,21 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { EventObject, StateMachine } from '@xstate/fsm';
-import { Context } from '../../models/fsm.model';
+import { ContentModel } from 'src/models/node.model';
+import { button } from 'telegraf/typings/markup';
 import { NodeEventEnum } from '../enums/node-event.enum';
+import { getBack } from '../functions/back-button.function';
+import { MessageControls } from '../interfaces/message-controls.interface';
+import { InlineKeyboardButton } from '../type/Inline-keyboard-button.type';
+import { MachineState } from '../type/machine-state.type';
 import { NodeService } from './node.service';
 
-export type MachineState = StateMachine.State<
-  Context,
-  EventObject,
-  { value: any; context: Context }
->;
-
-export type InlineKeyboardButton = { text: string; callback_data: string }[];
-
-export interface MessageControls {
-  title: string;
-  inlineButtons: InlineKeyboardButton[];
-}
 
 @Injectable()
 export class RenderService {
@@ -32,7 +24,26 @@ export class RenderService {
     if (state.matches(NodeEventEnum.SELECT_OPERATION)) {
       return this.getOperations(state);
     }
+    if (state.matches(NodeEventEnum.OPERATION_DONE)) {
+      return this.getCallBackMessage('DONE');
+    }
+    if (state.matches('open')) {
+      return this.getContentNode(state);
+    }
     return null;
+  }
+
+  private getContentNode(state: MachineState): MessageControls | null {
+    const node = this.nodeService.searchNodeById(Number(state.context.nodeId));
+    const buttons = node?.getContent().map((model: ContentModel) => {
+      return [{ text: model.content, callback_data: '1' }];
+    });
+
+    buttons.push(getBack());
+    return {
+      title: node.name,
+      inlineButtons: buttons,
+    };
   }
 
   private getAllNodes(state: MachineState): MessageControls | null {
@@ -44,15 +55,6 @@ export class RenderService {
       title: rootMap.name,
       inlineButtons: buttons,
     };
-  }
-
-  private getBack(): InlineKeyboardButton {
-    return [
-      {
-        text: '< BACK',
-        callback_data: 'event/' + NodeEventEnum.BACK,
-      },
-    ];
   }
 
   private getOperations(state: MachineState): MessageControls {
@@ -82,7 +84,16 @@ export class RenderService {
             callback_data: 'event/' + NodeEventEnum.OPEN,
           },
         ],
-        this.getBack(),
+        getBack(),
+      ],
+    } as MessageControls;
+  }
+
+  private getCallBackMessage(message: string): MessageControls {
+    return {
+      title: `${message}`,
+      inlineButtons: [
+        getBack(),
       ],
     } as MessageControls;
   }

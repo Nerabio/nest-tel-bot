@@ -11,6 +11,7 @@ export class NodeService {
   root: NodeModel = new NodeModel('Главная', 1);
   constructor(private eventEmitter: EventEmitter2) {
     const n = new NodeModel('Новая');
+    n.addContent('dirdrdkr drlfdr');
     n.add(new NodeModel('Под Новая'));
     n.add(new NodeModel('Под Новая 2'));
     n.add(new NodeModel('Под erg'));
@@ -48,4 +49,5 @@ export class NodeService {
     }
     return null;
   }
+
 }
